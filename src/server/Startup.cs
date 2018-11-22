@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using IdentityServer4.AccessTokenValidation;
 using IdentityServer4.Services;
 using IdentityServer4.Validation;
 using Microsoft.AspNetCore.Builder;
@@ -49,12 +50,29 @@ namespace server
                 .AddInMemoryApiResources(Config.GetApiResources())
                 .AddInMemoryClients(Config.GetClients())
                 .AddAspNetIdentity<ApplicationUser>()
-                .AddProfileService<ProfileService>(); 
+                .AddProfileService<ProfileService>();
+                //.AddTestUsers(Config.GetUsers());
+
+            services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
+                .AddIdentityServerAuthentication(x =>
+                {
+                    x.Authority = Configuration.GetSection("IdentityServerSettings:Host").Value;
+                    //x.AllowedScopes = new List<string> { "Api" };
+                    x.ApiSecret = "ServerSecret";
+                    x.ApiName = "server";
+                    x.SupportedTokens = SupportedTokens.Both;
+                    x.RequireHttpsMetadata = false;
+                    x.RoleClaimType = "role";
+
+                    //change this to true for SLL
+                    x.RequireHttpsMetadata = false;
+                });
 
             //resource owner setup for identity server
             services.AddTransient<IResourceOwnerPasswordValidator, ResourceOwnerPasswordValidator>();
             services.AddTransient<IProfileService, ProfileService>();
 
+            //add signalr
             services.AddSignalR(config => config.EnableDetailedErrors = true);
         }
 
@@ -75,6 +93,7 @@ namespace server
             //app.UseHttpsRedirection();
             app.UseStaticFiles();
 
+            //include signalr routes
             app.UseSignalR(routers => routers.MapHub<ChatHub>("/hubs/chat"));
 
             //app.UseAuthentication();

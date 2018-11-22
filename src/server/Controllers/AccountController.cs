@@ -27,10 +27,10 @@ namespace server.Controllers
             _chatHub = chatHub;
         }
 
-        [HttpPost]
-        public async Task<IActionResult> Register()
-        {
-            return await Task.Run(() => throw new NotImplementedException);
-        }
+        //[HttpPost]
+        //public async Task<IActionResult> Register([FromBody]string model)
+        //{
+        //    
+        //}
     }
 }
