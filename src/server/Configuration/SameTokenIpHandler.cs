@@ -7,17 +7,20 @@ using System.Threading.Tasks;
 
 namespace server.Configuration
 {
-    public class SameIpHandler : AuthorizationHandler<SameIpRequirement>
+    /// <summary>
+    /// Checks that the Token Ip matches current client Ip. Increased security for JWT.
+    /// </summary>
+    public class SameTokenIpHandler : AuthorizationHandler<SameTokenIpRequirement>
     {
         //context (used for ip)
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public SameIpHandler(IHttpContextAccessor httpContextAccessor) : base()
+        public SameTokenIpHandler(IHttpContextAccessor httpContextAccessor) : base()
         {
             _httpContextAccessor = httpContextAccessor;
         }
 
-        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, SameIpRequirement requirement)
+        protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, SameTokenIpRequirement requirement)
         {
             //get accessor client ip
             var clientIp = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
@@ -35,7 +38,7 @@ namespace server.Configuration
         }
     }
 
-    public class SameIpRequirement : IAuthorizationRequirement {
-        public SameIpRequirement()  { }
+    public class SameTokenIpRequirement : IAuthorizationRequirement {
+        public SameTokenIpRequirement()  { }
     }
 }

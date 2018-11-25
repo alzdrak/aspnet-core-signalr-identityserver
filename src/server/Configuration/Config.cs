@@ -37,13 +37,7 @@ namespace server.Configuration
                     Enabled = true,
                     Scopes =
                     {
-                        //new Scope(IdentityServerConstants.StandardScopes.OpenId),
-                        //new Scope(IdentityServerConstants.StandardScopes.Email),
-                        //new Scope(IdentityServerConstants.StandardScopes.Profile),
-                        //new Scope(IdentityServerConstants.StandardScopes.OfflineAccess),
-                        //new Scope("role"),
-                        //new Scope("ip_address")
-                        new Scope("ip_address", "IP Address")
+                        new Scope("ip_address")
                         {
                             UserClaims = { "ip_address" }
                         }

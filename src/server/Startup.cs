@@ -37,8 +37,11 @@ namespace server
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            //database connection
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+            //aspnet identity
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
                 //.AddUserStore<UserStore<ApplicationUser>()
@@ -85,10 +88,10 @@ namespace server
             //extra auth policies
             services.AddAuthorization(options =>
             {
-                options.AddPolicy("SameIp", policy => policy.Requirements.Add(new SameIpRequirement()));
+                options.AddPolicy("SameTokenIp", policy => policy.Requirements.Add(new SameTokenIpRequirement()));
             });
 
-            services.AddSingleton<IAuthorizationHandler, SameIpHandler>();
+            services.AddSingleton<IAuthorizationHandler, SameTokenIpHandler>();
 
 
             //resource owner setup for identity server

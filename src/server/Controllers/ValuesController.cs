@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace server.Controllers
 {
-    [Authorize(Policy = "SameIp")]
+    [Authorize(Policy = "SameTokenIp")]
     [Route("api/[controller]")]
     [ApiController]
     public class ValuesController : ControllerBase

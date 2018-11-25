@@ -85,7 +85,7 @@ namespace server.Configuration
         }
 
         /// <summary>
-        /// Check if user is active
+        /// Checks if the user account is active
         /// </summary>
         /// <param name="context">Used context to change IsActive state</param>
         public async Task IsActiveAsync(IsActiveContext context)
@@ -108,6 +108,8 @@ namespace server.Configuration
                         {
                             if (user != null)
                             {
+                                //todo: add ApplicationUser property IsActive/Deleted
+
                                 context.IsActive = true;
                             }
                         }

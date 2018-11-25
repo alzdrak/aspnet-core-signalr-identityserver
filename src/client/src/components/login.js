@@ -1,11 +1,13 @@
 import React, { Component } from "react";
-//import "./login.css";
+import "./login.css";
 
 class Login extends Component {
   constructor(props) {
     super(props);
 
     this.state = {};
+
+    this.openLogin = this.openLogin.bind(this);
   }
 
   /**
@@ -70,12 +72,89 @@ class Login extends Component {
       });
   }
 
+  openLogin() {
+    //var openLoginRight = document.querySelector(".h1");
+    var loginWrapper = document.querySelector(".login-wrapper");
+
+    loginWrapper.classList.toggle("open");
+    //event.currentTarget.style.backgroundColor = '#ccc';
+  }
+
   render() {
+    // openLoginRight.addEventListener("click", function() {
+    //   loginWrapper.classList.toggle("open");
+    // });
+
     this.getToken();
 
     return (
-      <div className="login">
-        <div />
+      <div className="login-wrapper">
+        <div className="login-left">
+          <button className="image-button" onClick={this.openLogin}>
+            <img
+              src="http://res.cloudinary.com/dzqowkhxu/image/upload/v1513679279/bg-login_bxxfkf.png"
+              alt=""
+            />
+          </button>
+
+          {/* <button className="h1" onClick={this.openLogin}>
+            Login
+          </button> */}
+        </div>
+        <div className="login-right">
+          <div className="h2">Register</div>
+
+          <div className="form-group">
+            <label htmlFor="username">
+              <input
+                className="login-input"
+                id="username"
+                type="text"
+                placeholder=""
+                required
+              />
+              <span className="label-text">Username</span>
+              <span className="focus-border" />
+            </label>
+          </div>
+          <div className="clearfix" />
+          <div className="form-group">
+            <label htmlFor="email">
+              <input
+                className="login-input"
+                id="email"
+                type="text"
+                placeholder=""
+                required
+              />
+              <span className="label-text">Email</span>
+              <span className="focus-border" />
+            </label>
+          </div>
+          <div className="form-group">
+            <label htmlFor="password">
+              <input
+                className="login-input"
+                id="password"
+                type="password"
+                placeholder=""
+                required
+              />
+              <span className="label-text">Password</span>
+              <span className="focus-border" />
+            </label>
+          </div>
+          <div className="checkbox-container">
+            <input type="checkbox" />
+            <div className="text-checkbox">
+              I agree with the terms of service.
+            </div>
+          </div>
+          <div className="button-area">
+            <button className="btn btn-secondary">Login</button>
+            <button className="btn btn-primary">Sign Up</button>
+          </div>
+        </div>
       </div>
     );
   }
