@@ -73,11 +73,9 @@ class Login extends Component {
   }
 
   openLogin() {
-    //var openLoginRight = document.querySelector(".h1");
     var loginWrapper = document.querySelector(".login-wrapper");
 
     loginWrapper.classList.toggle("open");
-    //event.currentTarget.style.backgroundColor = '#ccc';
   }
 
   render() {
