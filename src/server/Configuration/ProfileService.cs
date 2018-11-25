@@ -1,6 +1,8 @@
 ﻿using IdentityModel;
+using IdentityServer4.Extensions;
 using IdentityServer4.Models;
 using IdentityServer4.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
 using server.Models;
@@ -17,18 +19,25 @@ namespace server.Configuration
         //logger
         private readonly ILogger<ProfileService> _logger;
 
-        //services
-        private UserManager<ApplicationUser> _userManager = null;
-        private SignInManager<ApplicationUser> _signInManager = null;
+        //context (used for tracking ip)
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ProfileService(ILogger<ProfileService> logger, 
-            UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager)
+        //services
+        private ApplicationUserManager _userManager = null;
+        private SignInManager<ApplicationUser> _signInManager = null;
+        private readonly IUserClaimsPrincipalFactory<ApplicationUser> _claimsFactory;
+
+        public ProfileService(ILogger<ProfileService> logger,
+            IHttpContextAccessor httpContextAccessor,
+            ApplicationUserManager userManager,
+            SignInManager<ApplicationUser> signInManager,
+            IUserClaimsPrincipalFactory<ApplicationUser> claimsFactory)
         {
             _logger = logger;
-
+            _httpContextAccessor = httpContextAccessor;
             _userManager = userManager;
             _signInManager = signInManager;
+            _claimsFactory = claimsFactory;
         }
 
         /// <summary>
@@ -42,22 +51,28 @@ namespace server.Configuration
                 //check if correct client is chosen for getting profile data
                 if (context.Client.ClientId == "client")
                 {
-                    //get user id from claims
-                    var userId = context.Subject.Claims.FirstOrDefault(x => x.Type == "sub");
+                    //get client ip address
+                    var clientIp = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
 
-                    //if user id is an actual id greater than 0
-                    if (!string.IsNullOrEmpty(userId?.Value) && long.Parse(userId.Value) > 0)
+                    //get user id from claims
+                    //var userIdClaim = context.Subject.Claims.FirstOrDefault(x => x.Type == "sub");
+                    var userId = context.Subject.GetSubjectId();
+
+                    //if user id is an actual guid
+                    if (!string.IsNullOrEmpty(userId) && Guid.TryParse(userId, out var output))
                     {
                         //get user
-                        var user = await _userManager.FindByIdAsync(userId.Value);
+                        var user = await _userManager.FindByIdAsync(userId);
 
                         //if the user exists, issue the claims
                         if (user != null)
                         {
-                            var claims = GetClaims(user);
+                            //get all claims
+                            var claims = GetClaims(user, clientIp);
 
                             //set claims to context
                             context.IssuedClaims = claims.Where(x => context.RequestedClaimTypes.Contains(x.Type)).ToList();
+                            //context.IssuedClaims = claims2;
                         }
                     }
                 }
@@ -111,13 +126,14 @@ namespace server.Configuration
         /// </summary>
         /// <param name="user">Identity Application User</param>
         /// <returns>Array of Claims</returns>
-        private static Claim[] GetClaims(ApplicationUser user)
+        private static Claim[] GetClaims(ApplicationUser user, string ip)
         {
             return new Claim[]
             {
                 new Claim(JwtClaimTypes.Id, user.Id),
                 new Claim(JwtClaimTypes.Name, user.UserName),
                 new Claim(JwtClaimTypes.Email, user.Email),
+                new Claim("ip_address", ip),
 
                 //hard claim
                 new Claim(JwtClaimTypes.Role, "User")

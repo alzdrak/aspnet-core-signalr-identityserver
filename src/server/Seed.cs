@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using server.Configuration;
 using server.Data;
 using server.Models;
 using System;
@@ -21,19 +22,22 @@ namespace server
                 var context = scope.ServiceProvider.GetService<ApplicationDbContext>();
                 context.Database.Migrate();
 
-                var userMgr = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+                var userMgr = scope.ServiceProvider.GetRequiredService<ApplicationUserManager>();
                 var alice = userMgr.FindByNameAsync("alice").Result;
                 if (alice == null)
                 {
                     alice = new ApplicationUser
                     {
-                        UserName = "alice"
+                        UserName = "alice",
+                        Email = "AliceSmith@email.com"
                     };
                     var result = userMgr.CreateAsync(alice, "Pass123$").Result;
                     if (!result.Succeeded)
                     {
                         throw new Exception(result.Errors.First().Description);
                     }
+
+                    userMgr.AddToRoleAsync(alice, "user");
 
                     result = userMgr.AddClaimsAsync(alice, new Claim[]{
                         new Claim(JwtClaimTypes.Name, "Alice Smith"),
@@ -62,13 +66,16 @@ namespace server
                 {
                     bob = new ApplicationUser
                     {
-                        UserName = "bob"
+                        UserName = "bob",
+                        Email = "BobSmith@email.com"
                     };
                     var result = userMgr.CreateAsync(bob, "Pass123$").Result;
                     if (!result.Succeeded)
                     {
                         throw new Exception(result.Errors.First().Description);
                     }
+
+                    userMgr.AddToRoleAsync(bob, "user");
 
                     result = userMgr.AddClaimsAsync(bob, new Claim[]{
                         new Claim(JwtClaimTypes.Name, "Bob Smith"),

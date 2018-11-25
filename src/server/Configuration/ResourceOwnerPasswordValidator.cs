@@ -1,6 +1,7 @@
 ﻿using IdentityModel;
 using IdentityServer4.Models;
 using IdentityServer4.Validation;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
@@ -19,20 +20,24 @@ namespace server.Configuration
         //logger
         private readonly ILogger<ProfileService> _logger;
 
+        //context (used for tracking ip)
+        private readonly IHttpContextAccessor _httpContextAccessor;
+
         //services
-        private UserManager<ApplicationUser> _userManager = null;
+        private ApplicationUserManager _userManager = null;
         private SignInManager<ApplicationUser> _signInManager = null;
 
         //signalr hubs
         private readonly IHubContext<ChatHub> _chatHub;
 
         public ResourceOwnerPasswordValidator(ILogger<ProfileService> logger,
-            UserManager<ApplicationUser> userManager,
+            IHttpContextAccessor httpContextAccessor,
+            ApplicationUserManager userManager,
             SignInManager<ApplicationUser> signInManager,
             IHubContext<ChatHub> chatHub)
         {
             _logger = logger;
-
+            _httpContextAccessor = httpContextAccessor;
             _userManager = userManager;
             _signInManager = signInManager;
             _chatHub = chatHub;
@@ -43,14 +48,17 @@ namespace server.Configuration
             try
             {
                 //specific client trying to validate
-                string client_id = context.Request.Raw["client_id"];
+                string clientId = context.Request.Raw["client_id"];
 
                 //depending on client
-                if (client_id == "client")
+                if (clientId == "client")
                 {
                     //check user credentials 
                     var result = await _signInManager.PasswordSignInAsync(
                         context.UserName, context.Password, false, false);
+
+                    //get client ip address
+                    var clientIp = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
 
                     //see if user was successfully logged in
                     if (result.Succeeded)
@@ -62,7 +70,7 @@ namespace server.Configuration
                         context.Result = new GrantValidationResult(
                             subject: user.Id,
                             authenticationMethod: "custom",
-                            claims: GetClaims(user));
+                            claims: GetClaims(user, clientIp));
 
                         //notify all other clients of new user
                         await _chatHub.Clients.All.SendAsync("NewUser", user.UserName);
@@ -90,14 +98,14 @@ namespace server.Configuration
         /// </summary>
         /// <param name="user">Identity User</param>
         /// <returns>Array of User Claims</returns>
-        private static Claim[] GetClaims(ApplicationUser user)
+        private static Claim[] GetClaims(ApplicationUser user, string ip)
         {
             return new Claim[]
             {
                 new Claim(JwtClaimTypes.Id, user.Id),
                 new Claim(JwtClaimTypes.Name, user.UserName),
                 new Claim(JwtClaimTypes.Email, user.Email),
-
+                new Claim("ip_address", ip),
                 //hard claim
                 new Claim(JwtClaimTypes.Role, "User")
             };

@@ -1,12 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
 using System.Linq;
 using System.Threading.Tasks;
 using IdentityServer4.AccessTokenValidation;
 using IdentityServer4.Services;
 using IdentityServer4.Validation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -38,6 +41,10 @@ namespace server
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
+                //.AddUserStore<UserStore<ApplicationUser>()
+                //.AddRoleStore<IRoleStore<>()
+                .AddUserManager<ApplicationUserManager>()
+                //.AddRoleManager<RoleManager<>()
                 .AddDefaultTokenProviders();
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
@@ -52,6 +59,8 @@ namespace server
                 .AddAspNetIdentity<ApplicationUser>()
                 .AddProfileService<ProfileService>();
                 //.AddTestUsers(Config.GetUsers());
+
+            //JwtSecurityTokenHandler.DefaultInboundClaimTypeMap.Clear();
 
             services.AddAuthentication(IdentityServerAuthenticationDefaults.AuthenticationScheme)
                 .AddIdentityServerAuthentication(x =>
@@ -68,9 +77,24 @@ namespace server
                     x.RequireHttpsMetadata = false;
                 });
 
+            //httpcontext
+            services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+
+            services.AddScoped<ApplicationUserManager>();
+
+            //extra auth policies
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("SameIp", policy => policy.Requirements.Add(new SameIpRequirement()));
+            });
+
+            services.AddSingleton<IAuthorizationHandler, SameIpHandler>();
+
+
             //resource owner setup for identity server
             services.AddTransient<IResourceOwnerPasswordValidator, ResourceOwnerPasswordValidator>();
             services.AddTransient<IProfileService, ProfileService>();
+
 
             //add signalr
             services.AddSignalR(config => config.EnableDetailedErrors = true);

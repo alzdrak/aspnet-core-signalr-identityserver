@@ -1,8 +1,8 @@
-import React, { Component } from 'react';
-import logo from './logo.svg';
-import './app.css';
+import React, { Component } from "react";
+import logo from "./logo.svg";
+import "./app.css";
 
-import login from './components/login';
+import Login from "./components/login";
 
 class App extends Component {
   render() {
@@ -13,14 +13,7 @@ class App extends Component {
           <p>
             Edit <code>src/App.js</code> and save to reload.
           </p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
+          <Login />
         </header>
       </div>
     );
